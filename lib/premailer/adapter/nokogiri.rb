@@ -186,18 +186,8 @@ class Premailer
         end
 
         return nil unless thing
-
-        doc = nil
-
-        # Default encoding is ASCII-8BIT (binary) per http://groups.google.com/group/nokogiri-talk/msg/0b81ef0dc180dc74
-        if thing.is_a?(String) and RUBY_VERSION =~ /1.9/
-          thing = thing.force_encoding('ASCII-8BIT').encode!
-          doc = ::Nokogiri::XML(thing) {|c| c.recover }
-        else
-          doc = ::Nokogiri::XML(thing, nil, 'ASCII-8BIT') {|c| c.recover }
-        end
-
-        return doc
+        
+        return ::Nokogiri::XML(thing)
       end
 
     end
