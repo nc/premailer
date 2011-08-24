@@ -73,7 +73,8 @@ class Premailer
           end
 
           merged.create_dimensions_shorthand!
-          merged.create_border_shorthand!
+          # Not available in the current release, only on master of css_parser.
+          # merged.create_border_shorthand!
 
           # write the inline STYLE attribute
           el['style'] = Premailer.escape_string(merged.declarations_to_s)
