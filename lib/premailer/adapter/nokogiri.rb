@@ -52,7 +52,6 @@ class Premailer
           style = el.attributes['style'].to_s
 
           declarations = []
-
           style.scan(/\[SPEC\=([\d]+)\[(.[^\]\]]*)\]\]/).each do |declaration|
             rs = CssParser::RuleSet.new(nil, declaration[1].to_s, declaration[0].to_i)
             declarations << rs
@@ -123,19 +122,18 @@ class Premailer
       #
       # Returns an Nokogiri document.
       def write_unmergable_css_rules(doc, unmergable_rules) # :nodoc:
-        if head = doc.at('head')
-          styles = ''
-          unmergable_rules.each_selector(:all, :force_important => true) do |selector, declarations, specificity|
-            styles += "#{selector} { #{declarations} }\n"
+        styles = ''
+        unmergable_rules.each_selector(:all, :force_important => true) do |selector, declarations, specificity|
+          styles += "#{selector} { #{declarations} }\n"
+        end
+        
+        unless styles.empty?
+          style_tag = "<style type=\"text/css\">\n#{styles}></style>"
+          if body = doc.search('body')
+            doc.at_css('body').children.before(::Nokogiri::XML.fragment(style_tag))            
+          else
+            doc.inner_html = style_tag += doc.inner_html
           end
-
-          unless styles.empty?
-            style_tag = "\n<style type=\"text/css\">\n#{styles}</style>\n"
-
-            head.add_child(style_tag)
-          end
-        else
-          $stderr.puts "Unable to write unmergable CSS rules: no <head> was found" if @options[:verbose]
         end
         doc
       end
