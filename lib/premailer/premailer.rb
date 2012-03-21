@@ -150,13 +150,13 @@ class Premailer
                 :verbose => false,
                 :debug => false,
                 :io_exceptions => false,
-                :exclude_media_queries => false,
+                :ignore_inline => false,
                 :adapter => Adapter.use}.merge(options)
 
     @html_file = html
     @is_local_file = @options[:with_html_string] || Premailer.local_data?(html)
 
-    @exclude_media_queries = options[:exclude_media_queries]
+    @ignore_inline = options[:ignore_inline]
 
     @css_files = [@options[:css]].flatten
 
@@ -190,7 +190,7 @@ class Premailer
       @processed_doc = append_query_string(@processed_doc, options[:link_query_string])
     end
     load_css_from_options!
-    load_css_from_html!
+    load_css_from_html! unless @ignore_inline
   end
 
   # Array containing a hash of CSS warnings.
@@ -256,7 +256,11 @@ protected
           end
 
         elsif tag.to_s.strip =~ /^\<style/i
-          @css_parser.add_block!(tag.inner_html, :base_uri => @base_url, :base_dir => @base_dir, :only_media_types => [:screen, :handheld])
+          types = [:screen, :handheld]
+          if @exclude_media_queries
+            types = []
+          end
+          @css_parser.add_block!(tag.inner_html, :base_uri => @base_url, :base_dir => @base_dir, :only_media_types => types)
         end
       end
       tags.remove unless @options[:preserve_styles]
@@ -275,7 +279,6 @@ public
 # here be instance methods
 
   def media_type_ok?(media_types) # :nodoc:
-    return false if @exclude_media_queries
     return true if media_types.nil? or media_types.empty?
     media_types.split(/[\s]+|,/).any? { |media_type| media_type.strip =~ /screen|handheld|all/i }
   rescue
