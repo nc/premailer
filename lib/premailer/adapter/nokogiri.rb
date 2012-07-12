@@ -129,11 +129,11 @@ class Premailer
         unmergable_rules.each_selector(:all, :force_important => true) do |selector, declarations, specificity|
           styles += "#{selector} { #{declarations} }\n"
         end
-        
+
         unless styles.empty?
           style_tag = "<style type=\"text/css\">\n#{styles}></style>"
           if body = doc.search('body')
-            doc.at_css('body').children.before(::Nokogiri::XML.fragment(style_tag))            
+            doc.at_css('body').children.before(::Nokogiri::XML.fragment(style_tag))
           else
             doc.inner_html = style_tag += doc.inner_html
           end

@@ -246,4 +246,24 @@ END_HTML
     pm = Premailer.new(html_entities, :with_html_string => true, :adapter => :nokogiri, :replace_html_entities => true)
     assert_equal expected_html, pm.to_inline_css
   end
+
+  def test_include_link_tags_option
+    local_setup('base.html', :adapter => :nokogiri, :include_link_tags => true)
+    assert_match /1\.231/, @doc.at('body').attributes['style'].to_s
+    assert_match /display: none/, @doc.at('.hide').attributes['style'].to_s
+
+    local_setup('base.html', :adapter => :nokogiri, :include_link_tags => false)
+    assert_no_match /1\.231/, @doc.at('body').attributes['style'].to_s
+    assert_match /display: none/, @doc.at('.hide').attributes['style'].to_s
+  end
+
+  def test_include_style_tags_option
+    local_setup('base.html', :adapter => :nokogiri, :include_style_tags => true)
+    assert_match /1\.231/, @doc.at('body').attributes['style'].to_s
+    assert_match /display: block/, @doc.at('#iphone').attributes['style'].to_s
+
+    local_setup('base.html', :adapter => :nokogiri, :include_style_tags => false)
+    assert_match /1\.231/, @doc.at('body').attributes['style'].to_s
+    assert_no_match /display: block/, @doc.at('#iphone').attributes['style'].to_s
+  end
 end
