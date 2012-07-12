@@ -210,11 +210,13 @@ class Premailer
                 :include_style_tags => true,
                 :input_encoding => 'ASCII-8BIT',
                 :replace_html_entities => false,
-                :adapter => Adapter.use,
-                }.merge(options)
+                :ignore_inline => false,
+                :adapter => Adapter.use}.merge(options)
 
     @html_file = html
     @is_local_file = @options[:with_html_string] || Premailer.local_data?(html)
+
+    @ignore_inline = options[:ignore_inline]
 
     @css_files = [@options[:css]].flatten
 
@@ -248,7 +250,7 @@ class Premailer
       @processed_doc = append_query_string(@processed_doc, options[:link_query_string])
     end
     load_css_from_options!
-    load_css_from_html!
+    load_css_from_html! unless @ignore_inline
   end
 
   # CSS warnings.
@@ -315,8 +317,12 @@ protected
             @css_parser.load_uri!(link_uri, {:only_media_types => [:screen, :handheld]})
           end
 
-        elsif tag.to_s.strip =~ /^\<style/i && @options[:include_style_tags]
-          @css_parser.add_block!(tag.inner_html, :base_uri => @base_url, :base_dir => @base_dir, :only_media_types => [:screen, :handheld])
+        elsif tag.to_s.strip =~ /^\<style/i
+          types = [:screen, :handheld]
+          if @exclude_media_queries
+            types = []
+          end
+          @css_parser.add_block!(tag.inner_html, :base_uri => @base_url, :base_dir => @base_dir, :only_media_types => types)
         end
       end
       tags.remove unless @options[:preserve_styles]
